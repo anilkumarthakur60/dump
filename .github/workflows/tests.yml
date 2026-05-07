@@ -2,13 +2,50 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  lint:
+    name: Lint & Static Analysis
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-lint-${{ hashFiles('composer.json') }}
+          restore-keys: composer-lint-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check code style
+        run: composer format:check
+
+      - name: Run static analysis
+        run: composer analyse
+
+  tests:
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} – ${{ matrix.stability }}
+    runs-on: ubuntu-latest
+    needs: lint
 
     strategy:
       fail-fast: false
@@ -27,8 +64,6 @@ jobs:
           - laravel: '11.*'
             php: '8.5'
 
-    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} – ${{ matrix.stability }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +74,17 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl
           coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ matrix.php }}-${{ matrix.laravel }}-${{ matrix.stability }}-${{ hashFiles('composer.json') }}
+          restore-keys: composer-${{ matrix.php }}-${{ matrix.laravel }}-
 
       - name: Require Laravel version
         run: |
@@ -53,12 +99,6 @@ jobs:
 
       - name: Install dependencies
         run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
-
-      - name: Check formatting
-        run: composer format:check
-
-      - name: Run PHPStan
-        run: composer analyse
 
       - name: Run tests
         run: composer test -- --no-coverage
