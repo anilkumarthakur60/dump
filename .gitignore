@@ -1,0 +1,7 @@
+/vendor
+/bootstrap/cache
+/storage
+composer.lock
+.phpstan
+/.idea
+/.phpunit.cache
