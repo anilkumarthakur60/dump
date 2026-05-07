@@ -63,6 +63,34 @@ class DumpServerCommand extends Command
 
         $io->writeln('');
         $io->writeln(sprintf('<bg=%s;fg=white;options=bold>%s%s</>', $color, $label, $bar));
-        $descriptor->describe($io, $data, $context, $clientId);
+        $descriptor->describe($io, $data, $this->withFileLine($context), $clientId);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $context
+     * @return array<array-key, mixed>
+     */
+    private function withFileLine(array $context): array
+    {
+        if (! is_array($context['source'] ?? null)) {
+            return $context;
+        }
+
+        $source = $context['source'];
+        $line = is_int($source['line'] ?? null) ? $source['line'] : null;
+
+        if ($line === null) {
+            return $context;
+        }
+
+        foreach (['file', 'file_relative'] as $key) {
+            if (isset($source[$key]) && is_string($source[$key])) {
+                $source[$key] = $source[$key].':'.$line;
+            }
+        }
+
+        $context['source'] = $source;
+
+        return $context;
     }
 }
