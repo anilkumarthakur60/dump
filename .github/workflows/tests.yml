@@ -87,15 +87,7 @@ jobs:
           restore-keys: composer-${{ matrix.php }}-${{ matrix.laravel }}-
 
       - name: Require Laravel version
-        run: |
-          composer require \
-            "illuminate/config:${{ matrix.laravel }}" \
-            "illuminate/console:${{ matrix.laravel }}" \
-            "illuminate/http:${{ matrix.laravel }}" \
-            "illuminate/log:${{ matrix.laravel }}" \
-            "illuminate/support:${{ matrix.laravel }}" \
-            "orchestra/testbench:${{ matrix.testbench }}" \
-            --no-interaction --no-update
+        run: composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
 
       - name: Install dependencies
         run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
