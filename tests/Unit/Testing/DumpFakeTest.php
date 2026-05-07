@@ -41,10 +41,10 @@ it('intercepts VarDumper via fake()', function () {
     $fake->assertDumpedCount(1);
 });
 
-it('can be restored after faking', function () {
+it('restores the original handler without affecting recorded dumps', function () {
     $fake = DumpFake::fake();
     $fake->dump('before');
     $fake->restore();
 
-    expect($fake->getDumped())->toBeEmpty();
+    expect($fake->getDumped())->toBe(['before']);
 });

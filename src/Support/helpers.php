@@ -4,9 +4,7 @@ if (! function_exists('dump_if')) {
     function dump_if(bool $condition, mixed ...$values): void
     {
         if ($condition) {
-            foreach ($values as $value) {
-                dump($value);
-            }
+            dump(...$values);
         }
     }
 }
@@ -15,9 +13,7 @@ if (! function_exists('dump_unless')) {
     function dump_unless(bool $condition, mixed ...$values): void
     {
         if (! $condition) {
-            foreach ($values as $value) {
-                dump($value);
-            }
+            dump(...$values);
         }
     }
 }

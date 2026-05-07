@@ -9,29 +9,25 @@ use Symfony\Component\VarDumper\Server\Connection;
 
 class Dumper
 {
+    private readonly VarCloner $cloner;
+
     public function __construct(
         private readonly ?Connection $connection = null,
         private readonly int $maxDepth = 10,
-        private readonly int $maxItems = 2500,
-    ) {}
+        int $maxItems = 2500,
+    ) {
+        $this->cloner = new VarCloner;
+        $this->cloner->setMaxItems($maxItems);
+    }
 
     public function dump(mixed $value): void
     {
-        $data = $this->createVarCloner()->cloneVar($value)->withMaxDepth($this->maxDepth);
+        $data = $this->cloner->cloneVar($value)->withMaxDepth($this->maxDepth);
 
-        if ($this->connection !== null && $this->connection->write($data) !== false) {
+        if ($this->connection?->write($data) === true) {
             return;
         }
 
-        $dumper = in_array(PHP_SAPI, ['cli', 'phpdbg']) ? new CliDumper : new HtmlDumper;
-        $dumper->dump($data);
-    }
-
-    protected function createVarCloner(): VarCloner
-    {
-        $cloner = new VarCloner;
-        $cloner->setMaxItems($this->maxItems);
-
-        return $cloner;
+        (\PHP_SAPI === 'cli' || \PHP_SAPI === 'phpdbg' ? new CliDumper : new HtmlDumper)->dump($data);
     }
 }

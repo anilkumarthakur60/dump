@@ -8,6 +8,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Terminal;
 use Symfony\Component\VarDumper\Cloner\Data;
 use Symfony\Component\VarDumper\Command\Descriptor\CliDescriptor;
+use Symfony\Component\VarDumper\Command\Descriptor\DumpDescriptorInterface;
 use Symfony\Component\VarDumper\Command\Descriptor\HtmlDescriptor;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
@@ -15,9 +16,13 @@ use Symfony\Component\VarDumper\Server\DumpServer;
 
 class DumpServerCommand extends Command
 {
+    private const PALETTE = ['blue', 'green', 'yellow', 'magenta', 'cyan', 'red'];
+
     protected $signature = 'dump:server {--format=cli : The output format (cli, html).}';
 
     protected $description = 'Start the dump server to collect dump output.';
+
+    private int $count = 0;
 
     public function __construct(private readonly DumpServer $server)
     {
@@ -26,14 +31,7 @@ class DumpServerCommand extends Command
 
     public function handle(): void
     {
-        $option = $this->option('format');
-        $format = is_string($option) ? $option : 'cli';
-
-        $descriptor = match ($format) {
-            'cli' => new CliDescriptor(new CliDumper),
-            'html' => new HtmlDescriptor(new HtmlDumper),
-            default => throw new InvalidArgumentException(sprintf('Unsupported format "%s".', $format)),
-        };
+        $descriptor = $this->descriptorFor(is_string($this->option('format')) ? $this->option('format') : 'cli');
 
         $io = new SymfonyStyle($this->input, $this->output);
         $errorIo = $io->getErrorStyle();
@@ -43,18 +41,28 @@ class DumpServerCommand extends Command
         $errorIo->success(sprintf('Server listening on %s', $this->server->getHost()));
         $errorIo->comment('Quit the server with CONTROL-C.');
 
-        $dumpCount = 0;
-        $palette = ['blue', 'green', 'yellow', 'magenta', 'cyan', 'red'];
+        $this->server->listen(fn (Data $data, array $context, int $clientId) => $this->onDump($descriptor, $io, $data, $context, $clientId));
+    }
 
-        $this->server->listen(function (Data $data, array $context, int $clientId) use ($descriptor, $io, $palette, &$dumpCount): void {
-            $color = $palette[$dumpCount % count($palette)];
-            $dumpCount++;
-            $width = (new Terminal)->getWidth();
-            $label = " DUMP #{$dumpCount} ";
-            $bar = str_repeat('─', max(0, $width - mb_strlen($label)));
-            $io->writeln('');
-            $io->writeln(sprintf('<bg=%s;fg=white;options=bold>%s%s</>', $color, $label, $bar));
-            $descriptor->describe($io, $data, $context, $clientId);
-        });
+    private function descriptorFor(string $format): DumpDescriptorInterface
+    {
+        return match ($format) {
+            'cli' => new CliDescriptor(new CliDumper),
+            'html' => new HtmlDescriptor(new HtmlDumper),
+            default => throw new InvalidArgumentException(sprintf('Unsupported format "%s".', $format)),
+        };
+    }
+
+    /** @param array<array-key, mixed> $context */
+    private function onDump(DumpDescriptorInterface $descriptor, SymfonyStyle $io, Data $data, array $context, int $clientId): void
+    {
+        $color = self::PALETTE[$this->count % count(self::PALETTE)];
+        $this->count++;
+        $label = " DUMP #{$this->count} ";
+        $bar = str_repeat('─', max(0, (new Terminal)->getWidth() - mb_strlen($label)));
+
+        $io->writeln('');
+        $io->writeln(sprintf('<bg=%s;fg=white;options=bold>%s%s</>', $color, $label, $bar));
+        $descriptor->describe($io, $data, $context, $clientId);
     }
 }

@@ -4,17 +4,21 @@ namespace Anil\Dump\Context;
 
 use Symfony\Component\VarDumper\Dumper\ContextProvider\ContextProviderInterface;
 
-class StackTraceContextProvider implements ContextProviderInterface
+final class TraceContextProvider implements ContextProviderInterface
 {
-    /** @return array<string, mixed>|null */
-    public function getContext(): ?array
+    private const VENDOR_PREFIX = '/vendor/symfony/var-dumper/';
+
+    public function __construct(private readonly int $limit = 5) {}
+
+    /** @return array<string, mixed> */
+    public function getContext(): array
     {
         $frames = [];
 
-        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
+        foreach (debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
             $file = $frame['file'] ?? '';
 
-            if (empty($file) || str_contains($file, '/vendor/symfony/var-dumper/')) {
+            if ($file === '' || str_contains($file, self::VENDOR_PREFIX)) {
                 continue;
             }
 
@@ -24,7 +28,7 @@ class StackTraceContextProvider implements ContextProviderInterface
                 'function' => ($frame['class'] ?? '').($frame['type'] ?? '').$frame['function'],
             ];
 
-            if (count($frames) >= 5) {
+            if (count($frames) >= $this->limit) {
                 break;
             }
         }

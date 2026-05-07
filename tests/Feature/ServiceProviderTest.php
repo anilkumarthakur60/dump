@@ -1,13 +1,18 @@
 <?php
 
 use Anil\Dump\Commands\DumpServerCommand;
+use Anil\Dump\Commands\InstallCommand;
+use Anil\Dump\Config;
+use Anil\Dump\Dumper;
 
-it('registers the dump-server command', function () {
-    expect($this->app->bound('command.dump-server'))->toBeTrue();
+it('registers the dump-server commands', function () {
+    expect($this->app->make(DumpServerCommand::class))->toBeInstanceOf(DumpServerCommand::class)
+        ->and($this->app->make(InstallCommand::class))->toBeInstanceOf(InstallCommand::class);
 });
 
-it('resolves DumpServerCommand from the container', function () {
-    expect($this->app->make('command.dump-server'))->toBeInstanceOf(DumpServerCommand::class);
+it('binds the typed config and dumper', function () {
+    expect($this->app->make(Config::class))->toBeInstanceOf(Config::class)
+        ->and($this->app->make(Dumper::class))->toBeInstanceOf(Dumper::class);
 });
 
 it('has the correct default host configuration', function () {
