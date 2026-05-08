@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-08
+
+### Changed
+- Updated README installation section to document both `--dev` and production (`require`) install paths
+
 ## [0.1.1] - 2026-05-07
 
 ### Changed
