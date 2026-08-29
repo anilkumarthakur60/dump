@@ -5,7 +5,7 @@
 [![Tests](https://github.com/anilkumarthakur60/dump/actions/workflows/tests.yml/badge.svg)](https://github.com/anilkumarthakur60/dump/actions/workflows/tests.yml)
 [![License](https://img.shields.io/packagist/l/anil/dump.svg?style=flat-square)](LICENSE)
 
-A Laravel package that intercepts `dump()` and `dd()` calls and streams them to a dedicated terminal server — keeping your browser responses clean while you debug.
+A Laravel package that intercepts `dump()` and `dd()` calls and streams them to a dedicated terminal server  keeping your browser responses clean while you debug.
 
 Inspired by Symfony's `var-dump-server`, built for the Laravel ecosystem.
 
@@ -16,10 +16,10 @@ Inspired by Symfony's `var-dump-server`, built for the Laravel ecosystem.
 - Intercepts all `dump()` / `dd()` calls and forwards them to a running terminal server
 - Falls back to CLI or HTML output when the server is not running
 - Attaches request context (URI, method, controller) and a stack trace to every dump
-- Optional log channel support — write every dump to a Laravel log channel
+- Optional log channel support  write every dump to a Laravel log channel
 - Global helpers: `dump_if()`, `dump_unless()`, `dd_if()`, `dd_unless()`
 - `DumpFake` testing utility with rich PHPUnit assertions
-- Production guard — the handler is never registered when `APP_ENV=production`
+- Production guard  the handler is never registered when `APP_ENV=production`
 - Configurable clone depth and item limits via environment variables
 
 ---
@@ -36,7 +36,7 @@ Inspired by Symfony's `var-dump-server`, built for the Laravel ecosystem.
 
 ## Installation
 
-Install as a **dev dependency** (recommended — debug tooling should not ship to production):
+Install as a **dev dependency** (recommended  debug tooling should not ship to production):
 
 ```bash
 composer require anil/dump --dev
@@ -84,7 +84,7 @@ dump(['key' => 'value']);
 dd($request->all());
 ```
 
-When the server is running, output is captured and displayed in the server terminal — with request context and a stack trace — instead of inline in the browser.
+When the server is running, output is captured and displayed in the server terminal  with request context and a stack trace  instead of inline in the browser.
 
 When the server is **not** running, `dump()` falls back to normal CLI or HTML output.
 
@@ -128,7 +128,7 @@ return [
     // Set to false to disable the handler entirely in an environment
     'enabled' => env('DUMP_SERVER_ENABLED', true),
 
-    // VarCloner limits — increase for deeply nested structures
+    // VarCloner limits  increase for deeply nested structures
     'max_depth' => env('DUMP_SERVER_MAX_DEPTH', 10),
     'max_items' => env('DUMP_SERVER_MAX_ITEMS', 2500),
 
